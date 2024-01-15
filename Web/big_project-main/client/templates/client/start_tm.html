@@ -1,0 +1,583 @@
+<!-- start_tm.html -->
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block static %}
+    <!-- External CSS file link -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .chat-menu {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .chart {
+        background-color: #fff;
+        width: 200px;
+        height: 450px;
+        text-align: center;
+        border-radius: 5px; /* 둥근 모서리 설정 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과 추가 */
+    }
+
+    #clientbutton {
+        border: 1px solid #ccc; /* Add a 1px solid border with color #ccc */
+        padding: 10px; /* Add padding for better visual appearance */
+        border-radius: 5px; /* Optional: Add rounded corners */
+    }
+
+    #clientbutton:hover {
+        background-color: #f2f2f2; /* 마우스 호버 시 배경색 변경 */
+    }
+</style>
+
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h3>Outbound TM</h3>
+    {% comment %} <a>tm 목적:  {{ input_data }}</a> {% endcomment %}
+
+    <!-- main -->
+    <div class='chat-menu'>
+        <div class='chart'>
+            <a>회사파일 |</a>
+            {% for file in selectedFiles %}
+                <input type='checkbox' name='file_ids' value='{{ file.id }}'>
+                {{ file.file.name|cut:"_"|slice:"1:" }}
+            {% endfor %}
+            <div id="clientInfo">
+                {% for client in selectedClients %}
+                    <div id="clientbutton" onclick="showClientName('{{ client.name }}')">
+                        <img src='../../../static/images/user.png' alt='User Avatar' width='30' height='30'>
+                        <span>{{ client.name }}</span>
+                        <br>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 채팅 대화창 -->
+        <div class='chat-container'>
+            <div class='user-info'>
+                <img src='../../../static/images/user.png' alt='User Avatar' width='30' height='30'>
+                <span id="clickedClientName"></span>
+                <div class='user-status-indicator'></div>
+            </div>
+
+            <div class='chat-messages' id='chat-messages'>
+                <!-- 채팅 메시지들이 동적으로 추가될 부분 -->
+                <div class='message received'>
+                    <div class='message-bubble' id='initialMessage'>{{ question.0 }}</div>
+                </div>
+            </div>
+            <div class='input-container'>
+                <input type='text' id='message-input' placeholder='Type your message...'>
+                <button class='send-button' onclick='sendMessage()'>Send</button>
+            </div>
+        </div>
+    </div>
+    <button id='goBack' onclick='goBack()'>뒤로가기</button>
+</div>
+        {% comment %} 
+        <div>
+            <audio controls>녹음된 소리를 재생할 audio 엘리먼트</audio>
+            <br><br><br><br><br>
+            <div class="button-container">
+                <!-- 시작할 때 드러날 버튼들 -->
+                <button id="recordbutton" onclick="showButton('startrecord');" style="background-image: url('{% static 'loading_recording/icons8-recording-60.png' %}');" class="button-image"></button>
+                <button id="playbutton" onclick="playAudio(); showButton('playvoice');" style="background-image: url('{% static 'loading_recording/icon8-play-60.png' %}');" class="button-image"></button>
+                <!-- 시작할 때 숨어있을 이미지, 버튼들 -->
+                <button id="no_record" style="display: none; background-image: url('{% static 'loading_recording/icons8-no-record-60.gif' %}');" class="button-image"></button>
+                <button id="stop_record" onclick="showButton('stoprecord');" style="display: none; background-image: url('{% static 'loading_recording/icons8-voice-recognition-60.gif' %}');" class="button-image"></button>
+                <button id="no_play" style="display: none; background-image: url('{% static 'loading_recording/icons8-hearing-60.png' %}');" class="button-image"></button>
+                <button id="playing" onclick="showButton('stoprecord');" style="display: none; background-image: url('{% static 'loading_recording/icons8-speech-bubble-60.gif' %}');" class="button-image"></button>
+            </div>
+        </div>
+        {% endcomment %}
+    
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    const chatInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const initialMessage = document.getElementById('initialMessage');
+    const questions = [{% for q in question %}'{{ q }}', {% endfor %}];
+    const chatbots_ids = [{% for q in chatbots_ids %}'{{ q }}', {% endfor %}]; //생성된 챗봇 모델 고유 아이디 가져오기
+    let chatbots_id;
+
+    let currentQuestionIndex = 1;  // 0번째 질문은 이미 보여주었으므로 1부터 시작
+    let lastQuestionIndex; // 마지막 질문 인덱스
+    let exitConversation = false; // 대화 중단 원할시 True, 대화 계속 하길 원할시 False
+    let finalConversation = false; // 대화가 종료 되었을 경우 True, 대화가 끝나지 않을 경우 false
+    let currentChatbotId = null;
+
+    async function showClientName(clientName) {
+        // 클릭한 클라이언트의 이름을 표시하는 부분을 업데이트
+        const clickedClientNameElement = document.getElementById('clickedClientName');
+        var sendButton = document.querySelector('.send-button');
+        clickedClientNameElement.textContent = clientName;
+
+        // 메시지 깔끔하게 정리하는 부분
+        var chatMessages = document.getElementById('chat-messages');
+        // Check if the chat-messages element exists
+        if (chatMessages) {
+            // Remove all child elements of chat-messages
+            while (chatMessages.firstChild) {
+                chatMessages.removeChild(chatMessages.firstChild);
+            }
+        }
+
+        // 클릭한 클라이언트의 정보 가져오기
+        var spans = document.getElementById('clientInfo').getElementsByTagName('span');
+        // 클릭한 클라이언트의 인덱스 찾기
+        var clickedIndex = -1; // 초기값을 -1로 설정
+        for (var i = 0; i < spans.length; i++) {
+            if (spans[i].textContent === clientName) {
+                clickedIndex = i;
+                break; // 클라이언트를 찾았으면 루프를 종료
+            }
+        }
+        // 클라이언트의 인덱스를 출력 또는 사용
+        console.log('Clicked Client Index:', clickedIndex);
+        chatbots_id = chatbots_ids[clickedIndex]; // 전역 변수에 할당
+
+        // 대화 불러오기
+        let All_Chats = await getClientAllMessages(chatbots_id);
+        //console.log("html에서 불러온 채팅 전부");
+        //console.log(All_Chats);
+        //console.log(All_Chats.outbound_end);
+        //console.log(All_Chats.result);
+        //console.log(All_Chats.outbound_message);
+
+        if (All_Chats.outbound_end==='End') { //대화 안끝났으면 false로 초기화 해주기
+            finalConversation=true;
+            sendButton.disabled = true;
+        } else {
+            finalConversation=false;
+            exitConversation=false;
+            sendButton.disabled = false;
+        }
+
+
+        // 초기 대화값의 인덱스 설정
+        // HTML 엔터티 디코딩 함수
+        function decodeEntities(encodedString) {
+            var textArea = document.createElement('textarea');
+            textArea.innerHTML = encodedString;
+            return textArea.value;
+        }
+        var tmp_index = questions.indexOf(All_Chats.outbound_message);
+        if (All_Chats.outbound_end==='End') { //대화 안끝났으면 false로 초기화 해주기
+            finalConversation=true
+        } else {
+            finalConversation=false
+            for (var i = 0; i < questions.length; i++) {
+                if (decodeEntities(questions[i])===All_Chats.outbound_message) {
+                    console.log("Start ment indexOf");
+                    currentQuestionIndex = i+1 // 첫 대화의 초기 값 세팅   
+                    console.log(i);
+                }
+            }
+            lastQuestionIndex = All_Chats.q_len+currentQuestionIndex; // 문구의 마지막 인덱스 
+            console.log(lastQuestionIndex);
+        }
+
+
+
+        
+        // chat-messages 요소를 가져오기
+        var chatMessagesContainer = document.getElementById('chat-messages');
+        if (All_Chats.outbound_end) {
+            console.log("대화가 끝난 상태");
+        
+            // 여기에 대화 기록 전부 보여줘야 함
+            // 서버에서 받아온 모든 채팅 메시지에 대해 반복
+            for (var i = 0; i < All_Chats.result.length; i++) {
+                var chat = All_Chats.result[i];
+                console.log(chat);
+                console.log(chat.role);
+                console.log(chat.content);
+
+                // role 표시
+                var newMessageElement = document.createElement('div');
+                newMessageElement.className = 'message';
+
+                // 새로운 메시지 버블을 생성하고 내용을 설정
+                var newMessageBubble = document.createElement('div');
+                newMessageBubble.className = 'message-bubble';
+                newMessageBubble.textContent = chat.role;
+
+                // 새로운 메시지 버블을 메시지 요소에 추가
+                newMessageElement.appendChild(newMessageBubble);
+
+                // 서버에서 받아온 role 값에 따라 클래스 추가
+                newMessageElement.classList.add('received')
+                // chat-messages에 새로운 메시지 요소를 추가
+                chatMessagesContainer.appendChild(newMessageElement);
+
+                // content 표시
+                var newMessageElement = document.createElement('div');
+                newMessageElement.className = 'message';
+
+                // 새로운 메시지 버블을 생성하고 내용을 설정
+                var newMessageBubble = document.createElement('div');
+                newMessageBubble.className = 'message-bubble';
+                newMessageBubble.textContent = chat.content;
+
+                // 새로운 메시지 버블을 메시지 요소에 추가
+                newMessageElement.appendChild(newMessageBubble);
+
+                // 서버에서 받아온 role 값에 따라 클래스 추가
+                newMessageElement.classList.add('sent')
+                // chat-messages에 새로운 메시지 요소를 추가
+                chatMessagesContainer.appendChild(newMessageElement);
+                
+            }
+
+
+        } else {
+            // 대화 첫화면에 보이게 하기
+            // 새로운 메시지 요소를 생성
+            var newMessageElement = document.createElement('div');
+            newMessageElement.className = 'message received';
+            // 새로운 메시지 버블을 생성하고 내용을 설정
+            var newMessageBubble = document.createElement('div');
+            newMessageBubble.className = 'message-bubble';
+            newMessageBubble.textContent = All_Chats.outbound_message;
+            // 새로운 메시지 버블을 메시지 요소에 추가
+            newMessageElement.appendChild(newMessageBubble);
+            // chat-messages에 새로운 메시지 요소를 추가
+            chatMessagesContainer.appendChild(newMessageElement);
+
+        }
+        
+    }
+
+
+
+    async function getClientAllMessages(chatbot_id) {
+        try {
+            let save_response = await fetch('/client/start_tm/sendAllMessages/', {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'chatbots_id': chatbots_id,
+                }),
+            });
+            const data = await save_response.json();
+        
+            return data;  // 예시로 결과 값 반환
+        } catch (error) {
+            console.error("채팅 불러오는 부분(sendAllMessages) 에러 발생:", error);
+            throw error;  // 에러를 다시 던지면 이후에도 에러 처리 가능
+        }
+    }
+
+
+
+    async function sendMessage() {
+        const userMessage = chatInput.value.trim();
+
+
+
+        if (userMessage !== '') {
+            // 사용자의 입력을 채팅창에 동적으로 추가
+            const userChatMessage = document.createElement('div');
+            userChatMessage.className = 'message sent';
+            userChatMessage.innerHTML = `<div class="message-bubble">${userMessage}</div>`;
+            chatMessages.appendChild(userChatMessage);
+
+
+            // ajax, fetch 사용해야 할 부분
+            console.log(userMessage);
+            let results = await executeBackendTextProcessing(userMessage);
+            console.log("@@@");
+            console.log(results);
+
+            if (exitConversation===false){
+                // 대화를 계속 원하는 경우 (exitConversation False)
+                if (results === '부정') {
+                    const neMessage = document.createElement('div');
+                    neMessage.className = 'message received';
+                    neMessage.innerHTML = `<div class="message-bubble">혹시 대화를 종료하기를 원하시나요?</div>`;
+                    chatMessages.appendChild(neMessage);
+                    exitConversation = true;
+                } else {
+                    // 긍정 혹은 중립일 경우 실행되는 부분
+                    if (currentQuestionIndex < lastQuestionIndex) {
+                        const neMessage = document.createElement('div');
+                        neMessage.className = 'message received';
+                        neMessage.innerHTML = `<div class="message-bubble">${questions[currentQuestionIndex]}</div>`;
+                        chatMessages.appendChild(neMessage);
+                        currentQuestionIndex += 1;
+                    } else {
+                        // 모든 질문에 대한 응답이 끝났을 경우 채팅 종료
+                        const endMessage = document.createElement('div');
+                        endMessage.className = 'message received';
+                        endMessage.innerHTML = '<div class="message-bubble">채팅이 종료되었습니다.</div>';
+                        chatMessages.appendChild(endMessage);
+                        finalConversation=true;
+                        // 추가로 필요한 동작 수행 (채팅 종료 등)
+                    }
+                }
+
+            } else {
+                // 대화가 중단되는 것을 물어보는 단계( exitConversation가 True)
+                const neMessage = document.createElement('div');
+                if (results === '긍정') {
+                    const neMessage = document.createElement('div');
+                    neMessage.className = 'message received';
+                    neMessage.innerHTML = `<div class="message-bubble">감사합니다. 문의 사항 있다면 연락주세요. 02-XXXX-XXXX</div>`;
+                    chatMessages.appendChild(neMessage);
+                    exitConversation = true;
+                    finalConversation=true;
+                } else {
+                    exitConversation = false;
+                    // 긍정 혹은 중립일 경우 실행되는 부분
+                    if (currentQuestionIndex < lastQuestionIndex) {
+                        const neMessage = document.createElement('div');
+                        neMessage.className = 'message received';
+                        neMessage.innerHTML = `<div class="message-bubble">${questions[currentQuestionIndex]}</div>`;
+                        chatMessages.appendChild(neMessage);
+                        currentQuestionIndex += 1;
+                    } else {
+                        // 모든 질문에 대한 응답이 끝났을 경우 채팅 종료
+                        const endMessage = document.createElement('div');
+                        endMessage.className = 'message received';
+                        endMessage.innerHTML = '<div class="message-bubble">채팅이 종료되었습니다.</div>';
+                        chatMessages.appendChild(endMessage);
+                        // 추가로 필요한 동작 수행 (채팅 종료 등)
+                    }
+                }
+            }
+
+            // 입력창 초기화 및 포커스 유지
+            chatInput.value = '';
+            chatInput.focus();
+        }
+        //console.log("길이 테스트");
+        //console.log(questions.length, currentQuestionIndex);
+        // 대화 질문 끝까지 안내 나갔을 경우
+        if ((lastQuestionIndex-1) === currentQuestionIndex){
+            finalConversation = true;
+        }
+        // 대화가 끝났을 경우 채팅 내용 백앤드에 저장되게 실행
+        if (finalConversation===true){
+            // chat-messages 요소 안에 있는 모든 message 요소를 선택
+            let messageElements = document.querySelectorAll('.chat-messages .message');
+            // 결과를 저장할 배열 선언
+            let all_messages = [];
+            // 각 message 요소에 대해 반복
+            messageElements.forEach(async function(messageElement) {
+                // 각 message 요소 안에 있는 message-bubble 요소 선택
+                var messageBubble = messageElement.querySelector('.message-bubble');
+
+                // message-bubble 요소가 존재하는 경우 텍스트를 가져와서 배열에 추가
+                if (messageBubble) {
+                    var text = messageBubble.textContent.trim();
+                    all_messages.push(text);
+                }
+            // 데이터 백앤드로 전송하기
+            });
+            // 결과 확인
+            console.log(all_messages);
+            console.log()
+            let send_message_results = await save_all_messages(all_messages);
+            console.log(send_message_results);
+
+            var sendButton = document.querySelector('.send-button');
+            sendButton.disabled = true;
+        }
+        
+    }
+
+    // 모든 채팅 데이터 백앤드로 전달하기
+    async function save_all_messages(all_messages) {
+        try {
+            let save_response = await fetch('/client/start_tm/message_results/', {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'all_messages': all_messages,
+                    'chatbots_id': chatbots_id,
+                }),
+            });
+            const data = await save_response.json();
+            
+            //console.log(data);
+    
+            return data.result;  // 예시로 결과 값 반환
+        } catch (error) {
+            console.error("채팅 저장하는 부분(save_all_messages) 에러 발생:", error);
+            throw error;  // 에러를 다시 던지면 이후에도 에러 처리 가능
+        }
+    }
+
+
+    // 텍스트 백앤드 전달하여 감정 분류 및 결과 값 받기
+    async function executeBackendTextProcessing(userMessage) {
+        try {
+            const response = await fetch("/client/start_tm/text_processing/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userMessage: userMessage }),
+            });
+    
+            const data = await response.json();
+    
+            // 여기에서 필요한 동작 수행
+    
+            return data.result;  // 예시로 결과 값 반환
+        } catch (error) {
+            console.error("에러 발생:", error);
+            throw error;  // 에러를 다시 던지면 이후에도 에러 처리 가능
+        }
+    }
+
+
+    // 엔터 키를 누를 때 sendMessage 호출
+    chatInput.addEventListener('keyup', function (event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+
+    {% comment %}
+    function showButton(val) {
+
+            
+    function showButton(val) {
+        var startrecordButton = document.getElementById('recordbutton');
+        var playButton = document.getElementById('playbutton');
+        var cantrecordimg = document.getElementById('no_record');
+        var stoprecordButton = document.getElementById('stop_record');
+        var cantplayimg = document.getElementById('no_play');
+        var playingimg = document.getElementById('playing');
+       
+   
+        if (val === 'startrecord') {
+            startrecordButton.style.display = 'none';
+            playButton.style.display = 'none';
+            cantrecordimg.style.display = 'none';
+            stoprecordButton.style.display = 'block';
+            playingimg.style.display = 'none';
+            cantplayimg.style.display = 'block';
+        } else if (val === 'stoprecord') {
+            startrecordButton.style.display = 'block';
+            playButton.style.display = 'block';
+            cantrecordimg.style.display = 'none';
+            stoprecordButton.style.display = 'none';
+            playingimg.style.display = 'none';
+            cantplayimg.style.display = 'none';
+        } else if (val === 'playvoice') {
+            startrecordButton.style.display = 'none';
+            playButton.style.display = 'none';
+            cantrecordimg.style.display = 'block';
+            stoprecordButton.style.display = 'none';
+            playingimg.style.display = 'block';
+            cantplayimg.style.display = 'none';
+        }
+    }
+
+    // 엘리먼트 취득
+    const $audioEl = document.querySelector("audio");
+    const $startRecordBtn = document.getElementById("recordbutton");
+    const $stopRecordBtn = document.getElementById("stop_record");
+
+    // 녹음중 상태 변수
+    let isRecording = false;
+
+    // MediaRecorder 변수 생성
+    let mediaRecorder = null;
+
+    // 녹음 데이터 저장 배열
+    const audioArray = [];
+
+    // 버튼 기능 설정
+    document.addEventListener("DOMContentLoaded", function () {
+        // 초기에 알파 버튼만 보이게 설정
+        showButton('recordbutton');
+        showButton('playbutton');
+
+        // 시작 버튼에 클릭 이벤트 추가
+        $startRecordBtn.addEventListener('click', function () {
+            if (!isRecording) {
+                // 마이크 mediaStream 생성: Promise를 반환하므로 async/await 사용
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(async (mediaStream) => {
+                        // MediaRecorder 생성
+                        mediaRecorder = new MediaRecorder(mediaStream);
+
+                        // 이벤트핸들러: 녹음 데이터 취득 처리
+                        mediaRecorder.ondataavailable = (event) => {
+                            console.log('Received audio data:', event.data);
+                            audioArray.push(event.data);
+                        }
+
+                        // 이벤트핸들러: 녹음 종료 처리 & 재생하기
+                        mediaRecorder.onstop = async (event) => {
+                            const blob = new Blob(audioArray, { type: "audio/ogg; codecs=opus" });
+                            audioArray.splice(0);
+                            const formData = new FormData();
+                            formData.append('audio_data', blob);
+                            const response = await fetch('/client/save_audio/', {
+                                method: 'POST',
+                                body: formData,
+                                credentials: 'include',
+                            });
+                            const responseData = await response.json();
+                            console.log(responseData.message);
+
+                            const blobURL = window.URL.createObjectURL(blob);
+                            $audioEl.src = blobURL;
+                            $audioEl.play();
+                            showButton('stoprecord');
+                        };
+
+                        // 녹음 시작
+                        mediaRecorder.start();
+                        isRecording = true;
+                        showButton('startrecord');
+                    })
+                    .catch((error) => {
+                        console.error('Error accessing microphone:', error);
+                    });
+            }
+        });
+
+        // 종료 버튼에 클릭 이벤트 추가
+        $stopRecordBtn.addEventListener('click', function () {
+            if (isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        });
+    });
+
+
+    // 재생 버튼 클릭 시 오디오 재생
+    function playAudio() {
+        if ($audioEl.src) {
+            $audioEl.play();
+        }
+    }
+    {% endcomment %}
+
+{% endblock %}

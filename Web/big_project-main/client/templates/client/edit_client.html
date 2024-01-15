@@ -1,0 +1,25 @@
+<!-- edit_client.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h3 class='centered'>고객 정보 수정</h3><br>
+
+    <form method="post" class="margin-form-container">
+        {% csrf_token %}
+        {{ form.as_p }}  
+        <button type="submit">완료</button>
+        <button><a href="{% url 'client:list' %}" style='color:white'>취소</a></button>
+    </form>
+</div>
+{% endblock %}

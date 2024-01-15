@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.inner {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative; /* 상대 위치 지정 */
+}
+
+.error-message {
+    font-size: 12px;
+    color: red;
+}
+
+.form-input input {
+    width: calc(100% - 20px);
+    padding: 5px 10px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid #3498db; /* 밑줄 스타일 지정 */
+    transition: border-bottom 0.3s; /* 부드러운 효과를 위한 트랜지션 */
+}
+
+.form-input input:focus {
+    outline: none; /* 포커스 효과 제거 */
+    border-bottom: 1px solid #e74c3c; /* 포커스 시 다른 색상으로 변경 */
+}
+
+.form-input label {
+    position: absolute;
+    pointer-events: none; /* 라벨을 클릭해도 입력란이 포커스되지 않도록 설정 */
+    left: 10px;
+    top: 10px;
+    transition: top 0.3s, font-size 0.3s; /* 부드러운 효과를 위한 트랜지션 */
+}
+
+.form-input input:focus + label, .form-input input:not(:placeholder-shown) + label {
+    top: -10px; /* 입력란에 값이 있거나 포커스를 받으면 라벨을 위로 올림 */
+    font-size: 10px;
+}
+
+#submit-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.6;
+}
+
+#submit-btn:hover {
+    background-color: #3498db;
+}
+    
+    
+</style>
+    <!--main-->
+    <div id="main" class="container">
+        <hr>
+        <br><br>
+
+        <!-- Form -->
+        <div class="col align-center">
+            <h3>회원가입</h3>
+            <div class="inner">
+                <form method="post" action="{% url 'account:signup' %}" id="signup-form">
+                    {% csrf_token %}
+                    <br>
+    
+                    <div class="form-group">
+                        {{ form.username.label_tag }}
+                        <div class="form-input">
+                            {{ form.username }}
+                        </div>
+                        <div class="error-message">{{ form.username.errors }}</div>
+                        <div class="error-message" style="font-size: 10px; color: #555;">*영문, 숫자를 포함한 3자리 이상으로 입력하세요.</div>
+                        <div id="username-error" style="color: red;font-size: 15px;"></div>
+                    </div>
+    
+                    <div class="form-group">
+                        {{ form.email.label_tag }}
+                        <div class="form-input">
+                            {{ form.email }}
+                        </div>
+                        <div class="error-message">{{ form.email.errors }}</div>
+                    </div>
+    
+                    <div class="form-group">
+                        {{ form.password1.label_tag }}
+                        <div class="form-input">
+                            {{ form.password1 }}
+                        </div>
+                        <div class="error-message">{{ form.password1.errors }}</div>
+                        <div style="font-size: 12px; color: #555;">*영문, 숫자, 특수문자를 포함한 8자리 이상으로 입력하세요.</div>
+                        <div id="password-error" style="color: red; font-size: 15px;"></div>
+                    </div>
+    
+                    <div class="form-group">
+                        {{ form.password2.label_tag }}
+                        <div class="form-input">
+                            {{ form.password2 }}
+                        </div>
+                        <div class="error-message">{{ form.password2.errors }}</div>
+                        <div id="password2-error" style="color: red; font-size: 15px;"></div>
+                        <br>
+                        
+                    </div>
+                    {{ form.captcha }}
+                    <!-- login -->
+                    <br>
+                    <div class="12u$">
+                        <ul class="actions">
+                            <li><input type="submit" value="Submit" id="submit-btn"></li>
+                        </ul>
+                    </div>
+                </form>
+                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var usernameInput = document.getElementById("id_username");
+            var passwordInput1 = document.getElementById("id_password1");
+            var passwordInput2 = document.getElementById("id_password2");
+            var usernameErrorDiv = document.getElementById("username-error");
+            var passwordErrorDiv = document.getElementById("password-error");
+
+            function validateUsernameRules(username) {
+                if (username.length < 3) {
+                    return "아이디는 최소 3자 이상이어야 합니다.";
+                }
+                if (!/[a-zA-Z]/.test(username) || !/\d/.test(username)) {
+                    return "아이디는 영문과 숫자를 최소 하나씩 포함해야 합니다.";
+                }
+                return "";
+            }
+
+            function validatePasswordRules(password) {
+                if (password.length < 8) {
+                    return "비밀번호는 최소 8자 이상이어야 합니다.";
+                }
+                if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                    return "비밀번호는 특수문자를 최소 1개 이상 포함해야 합니다.";
+                }
+                if (!/\d/.test(password)) {
+                    return "비밀번호는 숫자를 최소 1개 이상 포함해야 합니다.";
+                }
+                return "";
+            }
+
+            function updateUsernameError() {
+                var errorMessage = validateUsernameRules(usernameInput.value);
+                usernameErrorDiv.innerText = errorMessage;
+            }
+
+            function updatePasswordError() {
+                if (passwordInput1.value !== passwordInput2.value) {
+                    document.getElementById("password2-error").innerText = "비밀번호가 일치하지 않습니다.";
+                } else {
+                    var errorMessage = validatePasswordRules(passwordInput1.value);
+                    passwordErrorDiv.innerText = errorMessage;
+                }
+            }
+            // 아이디 입력 시 이벤트 리스너 추가
+
+            usernameInput.addEventListener("input", updateUsernameError);
+            passwordInput1.addEventListener("input", updatePasswordError);
+            passwordInput2.addEventListener("input", function () {
+                updatePasswordError();
+                document.getElementById("password2-error").innerText = "";
+            });
+
+            document.getElementById("submit-btn").addEventListener("click", function (event) {
+                updateUsernameError();
+                updatePasswordError();
+
+                var response = grecaptcha.getResponse();
+                if (!response) {
+                    alert("Captcha를 클릭하세요.");
+                    event.preventDefault();
+                    return;
+                }
+
+                if (usernameErrorDiv.innerText !== "" || passwordErrorDiv.innerText !== "") {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+    <script>
+        grecaptcha.ready(function() {
+            var siteKey = '{{ settings.RECAPTCHA_PUBLIC_KEY }}';
+            grecaptcha.execute(siteKey, {action: 'signup'}).then(function(token) {
+            });
+        });
+    </script>
+    
+{% endblock %}

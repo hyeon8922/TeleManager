@@ -1,0 +1,171 @@
+{% load static %}
+
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이크 녹음</title>
+
+    <style>
+        /* 이미지 크기 통일 및 가로 정렬 스타일 */
+        .button-container {
+            display: flex;
+            gap: 0; /* 이미지 사이의 간격을 0으로 설정 */
+            justify-content: space-around; /* 가로로 정렬되도록 함 */
+        }
+        /* 이미지 크기 조절 스타일 */
+        .button-image {
+            width: 64px; /* 원하는 너비로 조절 */
+            height: 64px; /* 원하는 높이로 조절 */
+        }
+    </style>
+</head>
+<body>
+    <audio controls>녹음된 소리를 재생할 audio 엘리먼트</audio>
+
+    <br><br><br><br><br>
+    <div class="button-container">
+        <!-- 시작할 때 드러날 버튼들 -->
+        <button id="recordbutton" onclick="showButton('startrecord');" style="background-image: url('{% static 'loading_recording/icons8-recording-60.png' %}');" class="button-image"></button>
+        <button id="playbutton" onclick="playAudio(); showButton('playvoice');" style="background-image: url('{% static 'loading_recording/icon8-play-60.png' %}');" class="button-image"></button>
+        <!-- 시작할 때 숨어있을 이미지, 버튼들 -->
+        <button id="no_record" style="display: none; background-image: url('{% static 'loading_recording/icons8-no-record-60.gif' %}');" class="button-image"></button>
+        <button id="stop_record" onclick="showButton('stoprecord');" style="display: none; background-image: url('{% static 'loading_recording/icons8-voice-recognition-60.gif' %}');" class="button-image"></button>
+        <button id="no_play" style="display: none; background-image: url('{% static 'loading_recording/icons8-hearing-60.png' %}');" class="button-image"></button>
+        <button id="playing" onclick="showButton('stoprecord');" style="display: none; background-image: url('{% static 'loading_recording/icons8-speech-bubble-60.gif' %}');" class="button-image"></button>
+    </div>
+
+</body>
+<script>
+
+    // 엘리먼트 취득
+    const $audioEl = document.querySelector("audio");
+    const $startRecordBtn = document.getElementById("recordbutton");
+    const $stopRecordBtn = document.getElementById("stop_record");
+
+    // 녹음중 상태 변수
+    let isRecording = false;
+
+    // MediaRecorder 변수 생성
+    let mediaRecorder = null;
+
+    // 녹음 데이터 저장 배열
+    const audioArray = [];
+
+    // 버튼 기능 설정
+    document.addEventListener("DOMContentLoaded", function () {
+        // 초기에 알파 버튼만 보이게 설정
+        showButton('recordbutton');
+        showButton('playbutton');
+
+        // 시작 버튼에 클릭 이벤트 추가
+        $startRecordBtn.addEventListener('click', function () {
+            if (!isRecording) {
+                // 마이크 mediaStream 생성: Promise를 반환하므로 async/await 사용
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(async (mediaStream) => {
+                        // MediaRecorder 생성
+                        mediaRecorder = new MediaRecorder(mediaStream);
+
+                        // 이벤트핸들러: 녹음 데이터 취득 처리
+                        mediaRecorder.ondataavailable = (event) => {
+                            console.log('Received audio data:', event.data);
+                            audioArray.push(event.data);
+                        }
+
+                        // 이벤트핸들러: 녹음 종료 처리 & 재생하기
+                        mediaRecorder.onstop = async (event) => {
+                            const blob = new Blob(audioArray, { type: "audio/ogg; codecs=opus" });
+                            audioArray.splice(0);
+                            const formData = new FormData();
+                            formData.append('audio_data', blob);
+                            const response = await fetch('/client/save_audio/', {
+                                method: 'POST',
+                                body: formData,
+                                credentials: 'include',
+                            });
+                            const responseData = await response.json();
+                            console.log(responseData.message);
+
+                            const blobURL = window.URL.createObjectURL(blob);
+                            $audioEl.src = blobURL;
+                            $audioEl.play();
+                            showButton('stoprecord');
+                        };
+
+                        // 녹음 시작
+                        mediaRecorder.start();
+                        isRecording = true;
+                        showButton('startrecord');
+                    })
+                    .catch((error) => {
+                        console.error('Error accessing microphone:', error);
+                    });
+            }
+        });
+
+        // 종료 버튼에 클릭 이벤트 추가
+        $stopRecordBtn.addEventListener('click', function () {
+            if (isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        });
+    });
+
+
+    // 재생 버튼 클릭 시 오디오 재생
+    function playAudio() {
+        if ($audioEl.src) {
+            $audioEl.play();
+        }
+    }
+
+    
+
+
+    // 버튼 전환을 수행하는 코드
+    function showButton(val) {
+        var startrecordButton = document.getElementById('recordbutton');
+        var playButton = document.getElementById('playbutton');
+        var cantrecordimg = document.getElementById('no_record');
+        var stoprecordButton = document.getElementById('stop_record');
+        var cantplayimg = document.getElementById('no_play');
+        var playingimg = document.getElementById('playing');
+        
+    
+        if (val === 'startrecord') {
+            startrecordButton.style.display = 'none';
+            playButton.style.display = 'none';
+            cantrecordimg.style.display = 'none';
+            stoprecordButton.style.display = 'block';
+            playingimg.style.display = 'none';
+            cantplayimg.style.display = 'block';
+        } else if (val === 'stoprecord') {
+            startrecordButton.style.display = 'block';
+            playButton.style.display = 'block';
+            cantrecordimg.style.display = 'none';
+            stoprecordButton.style.display = 'none';
+            playingimg.style.display = 'none';
+            cantplayimg.style.display = 'none';
+        } else if (val === 'playvoice') {
+            startrecordButton.style.display = 'none';
+            playButton.style.display = 'none';
+            cantrecordimg.style.display = 'block';
+            stoprecordButton.style.display = 'none';
+            playingimg.style.display = 'block';
+            cantplayimg.style.display = 'none';
+        }
+    }
+
+</script>
+
+<br>
+<a>우선,시작/종료 버튼을 1번 누르면 녹음이 바로 시작된다.</a>
+<br>
+<a>다음,시작/종료 버튼을 다시 누르면 녹음이 종료되면서 녹음한 음성이 재생된다.</a>
+<br>
+<a>음성이 재생된 뒤에는 재생 버튼(|>)을 눌러서 재확인이 가능하며, 세로로 점 3개 있는 부분을 눌러 다운로드도 가능하다.</a>
+<br>
+<a>시작/종료 버튼을 다시 누르면 기존의 녹음 파일은 리셋되며, 처음 동작을 반복한다.</a>
+</html>

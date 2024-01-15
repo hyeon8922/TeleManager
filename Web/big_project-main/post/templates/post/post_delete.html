@@ -1,0 +1,24 @@
+<!-- post_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h1>Are you sure you want to delete "{{ post.title }}"?</h1>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+    </form>
+
+    <a href="/post/">Cancel</a>
+</div>
+{% endblock %}

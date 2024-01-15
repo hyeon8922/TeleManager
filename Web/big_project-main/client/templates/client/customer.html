@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+{% extends 'base.html' %} <!-- 이거 C:\Users\user\Desktop\big_project\templates\base.html으로 연결되는거였네? -->
+
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- 배너 -->
+<section id="banner">
+    <div class="inner">
+        <header>
+            <h1>TeleManager</h1>
+            <p>Outbound TM Automation Service for Enterprises</p>
+            <form method="post" enctype="multipart/form-data" action="{% url 'client:upload' %}">
+                {% csrf_token %}
+                <label for="excel_file">Excel 파일 업로드:</label>
+                <input type="file" name="excel_file" accept=".xlsx, .xls">
+                <button type="submit">업로드</button>
+            </form>
+        </header>
+        <a href="/" class="button big scrolly">챗봇 상담</a>
+    </div>
+</section>
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객 목록</title>
+
+    <style>
+        .pagination a.previous {
+            width: 50px;  /* 예시 값, 필요에 따라 조정하세요 */
+            height: 20px; /* 예시 값, 필요에 따라 조정하세요 */
+            display: inline-block;
+        }
+        .pagination a {
+        display: inline-block;
+        width: 50px;  /* 페이지 번호의 고정 너비 설정, 필요에 따라 조정 가능 */
+        text-align: center;  /* 내용 중앙 정렬 */
+        margin: 0 5px;  /* 페이지 번호 간의 간격 설정 */
+        padding: 5px 0;  /* 페이지 번호 내의 여백 설정 */
+        border: 1px solid #ccc;  /* 테두리 설정, 필요에 따라 스타일 조정 가능 */
+        border-radius: 5px;  /* 둥근 모서리 설정, 필요에 따라 조정 가능 */
+        }
+
+        .pagination .page-current {
+            width: auto;  /* 현재 페이지 번호의 너비를 자동으로 설정 */
+            margin: 0 5px;  /* 다른 페이지 번호와의 간격 설정 */
+            padding: 5px 10px;  /* 내용의 여백 설정 */
+            background-color: #f5f5f5;  /* 현재 페이지 번호의 배경색 설정, 필요에 따라 조정 가능 */
+        }
+    </style>
+
+</head>
+<body> <!-- 수정사항 -->
+
+    <ul class="nav navbar-nav navbar-right">
+        {% if not user.is_authenticated %}
+            <li><a href="{% url 'account:signup' %}">회원 가입 </a> </li>
+            <li><a href="{% url 'account:login' %}?next={{request.path}}">로그인</a></li>
+        {% else %}
+            <li><a href="">{{user}}님!</a> </li> 
+            <li><a href="{%  url 'account:logout' %}?next={{request.path}}">로그 아웃</a></li>
+        {% endif %}
+     </ul>
+
+
+{% if tmgoal %}
+    <p>마케팅 목적 : {{ tmgoal }}</p>
+{% else %}
+    <p>tmgoal이 없습니다.</p>
+{% endif %}
+
+
+
+<h2>마케팅 정보</h2>
+
+<form method="post" action="{% url 'client:delete_selected' %}">
+    {% csrf_token %}
+    <table border="1"> 
+        <thead>
+            <tr>
+                <th><div><input type="checkbox" id="select-all2"><label for="select-all2"></label></div></th>
+                <th>파일목록</th>
+                <th>수정하기</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+                <tr>
+                    <td> 
+                        <div>
+                            <input type="checkbox" id="list_{{ file.id }}" name="file_ids" value="{{ file.id }}">
+                            <label for="list_{{ file.id }}"></label>
+                        </div>
+                    </td>
+                    <td>{{ file.name }}</td>
+                    <td>{{ file.location }}</td>
+                    <td>
+                        <a href="{% url 'client:edit_client' file.id %}">수정하기</a> | 
+                        <a href="{% url 'client:delete_client' file.id %}">삭제하기</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br><br>
+    <button type="submit">선택된 파일 삭제</button>
+    <!-- <button><a href="{% url 'client:upload' %}">고객 정보 업로드</a></button> -->
+    <button onclick="showMessageBox()">클릭하세요</button>
+
+    <script>
+        function showMessageBox() {
+          alert("안녕하세요! 메시지 박스가 뜹니다.");
+          // 확인 버튼을 누르면 다른 웹 페이지로 이동
+          window.location.href = "http://localhost:8000"; // 이동하고 싶은 페이지의 URL로 변경
+    }
+    </script>
+
+</form>
+<br><br>
+
+{% if is_paginated %}
+<div class="pagination">
+    <span class="page-links">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="previous">이전</a>
+        {% else %}
+            <!-- 맨 처음 페이지일 때, 이전 버튼이 마지막으로  -->
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="previous">이전</a>
+        {% endif %}
+
+        <span class="page-current">
+                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"  class="previous">다음</a>
+        {% else %}
+            <!-- 맨 처음 페이지일 때, 다음 버튼이 첫 페이지로 -->
+            <a href="?page=1" class="previous">다음</a>
+        {% endif %}
+    </span>
+</div>
+{% endif %}
+
+
+
+<!-- 전체 선택하는 버튼, 선택된 고객 삭제 버튼 클릭 시 경고창 뜨게 구현-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const selectAllCheckbox = document.getElementById('select-all');   //select-all 읽기
+
+        
+        selectAllCheckbox.addEventListener('change', function() {  // selectAll 체크박스의 상태가 변경될 때마다 실행
+            
+            const checkboxes = document.querySelectorAll('input[name="client_ids"]');  //모든 체크 된 요소 가져오기
+
+            // selectAll 체크박스의 상태에 따라 모든 체크박스의 상태 변경
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        //확인 메시지 표시
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            const checkedCount = document.querySelectorAll('input[name="client_ids"]:checked').length;
+
+            if (checkedCount > 0) {
+                const confirmed = confirm('정말 선택된 고객을 삭제하시겠습니까?');
+                if (!confirmed) {
+                    event.preventDefault(); // 폼 제출 중지
+                }
+            } 
+        });
+    });
+</script>
+
+</body>
+</html>
+{% endblock %}

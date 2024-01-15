@@ -1,0 +1,66 @@
+<!-- templates/registration/agreement.html -->
+
+{% load static %}
+{% load custom_tags %}
+
+{% block contents %}
+
+<form action="{% url 'account:agreement' %}" method="POST" id="agreementForm">
+    {% csrf_token %}
+
+    <div class="scrollable-container">
+        <div class="scrollable-box" style="max-height: 300px; overflow-y: auto;">
+            <!-- 여기에 이용약관 내용을 넣으세요 -->
+            {{ "static/file/서비스이용약관.docx" | file_content|safe }}
+            {% for section in sections1 %}
+                <div class="section">
+                    {{ section|safe }}
+                </div>
+            {% endfor %}
+
+        </div>
+        <label>
+            <input type="checkbox" name="agreement1" class="individual-checkbox" required />
+            <span>위 내용을 읽었으며, 이용약관에 동의합니다.</span>
+        </label>
+    </div>
+    <br><br>
+    <div class="scrollable-container">
+        <div class="scrollable-box"  style="max-height: 300px; overflow-y: auto;">
+           <!-- 여기에 개인정보 처리방침 내용을 넣으세요 -->
+           {{ "static/file/개인정보 수집 및 활용 동의서.docx" | file_content|safe }}
+           {% for section in sections1 %}
+               <div class="section">
+                   {{ section|safe }}
+               </div>
+           {% endfor %}
+       </div>
+
+       <label>
+           <input type="checkbox" name="agreement2" class="individual-checkbox" required />
+           <span>위 내용을 읽었으며, 개인정보 수집 및 이용에 동의합니다.</span>
+        </label>
+   </div>
+</form>
+
+<script>
+    const checkboxes = document.querySelectorAll('.individual-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            // 모든 체크박스가 선택되었는지 확인
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            // 모든 체크박스가 선택되었다면 다른 액션을 수행
+            if (allChecked) {
+                // 여기에 선택되었을 때의 동작 추가
+                console.log('모든 체크박스가 선택되었습니다.');
+            }
+        });
+    });
+
+    document.getElementById('disagreeButton').addEventListener('click', function () {
+        window.location.href = "{% url 'account:login' %}";
+    });
+</script>
+{% endblock %}

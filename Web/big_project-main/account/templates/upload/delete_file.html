@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 정보 삭제</title>
+</head>
+<body>
+
+<h2>파일 정보 삭제</h2>
+
+<p>{{ file.file.name|cut:"user_files/" }} 파일을 정말 삭제하시겠습니까?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">삭제</button>
+    <button><a href="{% url 'client:list' %}">취소</a></button>
+</form>
+
+</body>
+</html>

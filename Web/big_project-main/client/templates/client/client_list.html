@@ -1,0 +1,423 @@
+<!-- client_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+    <style>
+        .my-button-link {
+            display: inline-block;
+            padding: 10px 30px; /* 텍스트 주변 여백 조절 */
+            text-decoration: none;
+            white-space: nowrap;
+            
+            /* 버튼을 아래로 내리는 부분 수정 */
+            line-height: 18px; /* 텍스트 높이에 맞춤 */
+        
+            /* 버튼 크기를 변경하는 부분 */
+            width: 166px; /* 원하는 크기로 조절하세요. */
+            height: 38px; /* 원하는 크기로 조절하세요. */
+            
+            /* 텍스트 배경 블럭 정중앙에 맞추기 */
+            vertical-align: middle;
+    
+            /* 텍스트를 위쪽으로 이동 */
+            margin-top: -3px;
+        }
+
+        
+        .pagination {
+        display: inline-block;
+        width: 50px;  /* 페이지 번호의 고정 너비 설정, 필요에 따라 조정 가능 */
+        height: 32px; /* 예시 값, 필요에 따라 조정하세요 */
+        text-align: center;  /* 내용 중앙 정렬 */
+        margin: 0 5px;  /* 페이지 번호 간의 간격 설정 */
+        padding: 5px 0;  /* 페이지 번호 내의 여백 설정 */
+        border: 1px solid #ccc;  /* 테두리 설정, 필요에 따라 스타일 조정 가능 */
+        border-radius: 5px;  /* 둥근 모서리 설정, 필요에 따라 조정 가능 */
+        }
+
+        .pagination .page-current {
+            width: auto;  /* 현재 페이지 번호의 너비를 자동으로 설정 */
+            margin: 0 5px;  /* 다른 페이지 번호와의 간격 설정 */
+            padding: 5px 10px;  /* 내용의 여백 설정 */
+            background-color: #f5f5f5;  /* 현재 페이지 번호의 배경색 설정, 필요에 따라 조정 가능 */
+        }
+
+
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center; /* 수직 중앙 정렬을 위해 추가 */
+            gap: 10px; /* 버튼 사이의 간격을 조절합니다. 필요에 따라 조절 가능 */
+            margin-top: 8%;
+        }
+
+        button.upload-button, button.action-button {
+            padding: 15px 25px;  
+            font-size: 16px;
+            width: 30%;
+            margin: 3% 5%; 
+            border: none;
+            background-color: #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        button.upload-button:hover, button.action-button:hover {
+            background-color: #ccc;
+        }
+
+        /* 이것은 엑셀 표에 관련된 css */
+        .table-container, .table-file {
+            display: flex;
+            justify-content: center;
+            width: 100%; /* 원하는 최소 가로 길이로 설정 */
+        }
+
+        table {
+            /* Add any additional styling for your table here */
+            border-collapse: collapse;
+            width: 1400px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            min-width: 100px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #customer, #filelist {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+
+        /* 목록 간 선 스타일링 */
+        .list-separator {
+            border-top: 2px solid #ccc;  /* 원하는 색상과 두께로 설정 */
+            margin-top: 20px;  /* 선 위 여백 조절, 필요에 따라 조정 가능 */
+            margin-bottom: 20px;  /* 선 아래 여백 조절, 필요에 따라 조정 가능 */
+        }
+
+    </style>
+
+
+
+    <!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <form id ='searchForm' action="" method="get" class="custom-search" >
+        {% csrf_token %}
+        <input type="text" id="searchInput" name="keyword" value="{{q|default:''}}" >
+        <input type="submit" value="Search" >
+    </form>
+<br><br>
+<h3 id='customer' class="margin-form-container">고객 목록</h3>
+<div style="display: flex; justify-content: center;" class="table-container">
+
+    <form method="post" action="{% url 'client:delete_selected' %}" id='client_form'>
+        {% csrf_token %}
+        <table border="1"> 
+            <thead>
+                <tr>
+                    <th><div><input type="checkbox" id="select-all"><label for="select-all"></label></div></th>
+                    <th>이름</th>
+                    <!--<th>주소</th>-->
+                    <th>전화번호</th>
+                    <th>나이</th>
+                    <th>성별</th>
+                    <th>상담날짜</th>
+                    {% comment %} <th>TM 목적</th>
+                    <th>감성</th> {% endcomment %}
+                    <th>고객정보</th>
+                    <th>고객관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in client_obj %}
+                    <tr>
+                        <td> 
+                            <div>
+                                <input type="checkbox" id="copy_{{ client.id }}" name="client_ids" value="{{ client.id }}">
+                                <label for="copy_{{ client.id }}"></label>
+                            </div>
+                        </td>
+                        <td>{{ client.name|slice:"0:1" }}{% for i in client.name|slice:"1:" %}*{% endfor %}</td>
+                    <!--   <td>{{ client.location }}</td> --> 
+                        <td>{{ client.number|slice:"0:4" }}****-****</td>
+                        <td>
+                            {% if client.age < 10 %}
+                                유아
+                            {% elif client.age < 20 %}
+                                10대
+                            {% elif client.age < 30 %}
+                                20대
+                            {% elif client.age < 40 %}
+                                30대
+                            {% elif client.age < 50 %}
+                                40대
+                            {% elif client.age < 60 %}
+                                50대
+                            {% else %}
+                                60대 이상
+                            {% endif %}
+                        </td>
+                        <td>{{ client.gender }}</td>
+                        <td>{{ client.tm_date|date:"Y. m. d P" }}</td>
+                        {% comment %} <td></td>
+                        <td>O/X</td> {% endcomment %}
+                        <td>{{ client.info }}</td>
+                        <td>
+                            <a href="{% url 'client:edit_client' client.id %}">수정</a> 
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div style="display: flex; justify-content: center;">
+            <span class="page-links">
+        
+                {% if client_obj.has_previous %}
+                    <a href="?client_page={{ client_obj.previous_page_number }}" class="pagination">이전</a>
+                {% else %}
+                    <a href="?client_page={{ client_obj.paginator.num_pages }}" class="pagination">이전</a>
+                {% endif %}
+
+                <span class="page-current">
+                    {{ client_obj.number }} / {{ client_obj.paginator.num_pages }}
+                </span>
+        
+                {% if client_obj.has_next %}
+                    <a href="?client_page={{ client_obj.next_page_number }}" class="pagination">다음</a>
+                {% else %}
+                    <a href="?client_page={{ 1 }}" class="pagination">다음</a>
+                {% endif %}
+
+                <a href="{% url 'client:upload' %}" class="my-button-link">파일 업로드</a>
+                <button type="submit">선택된 고객 삭제</button>
+
+            </span>
+        </div>
+    </form>
+</div>
+<hr>
+<br>
+<br>
+
+<h3 id='filelist'>회사 파일 목록</h3>
+<div style="display: flex; justify-content: center;" class="table-file">
+    <form method="post" action="{% url 'account:delete_selected' %}" id='file_form'>
+        {% csrf_token %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th><div><input type="checkbox" id="select-all2"><label for="select-all2"></label></div></th>
+                    <th>파일 이름</th>
+                    <th>업로드 날짜</th>
+                    <th>설명</th>
+                    <th>임베딩 파일</th>
+                    <th>파일관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in file_obj %}
+                    <tr>
+                        <td>
+                            <div>
+                                <input type="checkbox" id="copy_{{ file.id }}" name="file_ids" value="{{ file.id }}">
+                                <label for="copy_{{ file.id }}"></label>
+                            </div>
+                        </td>
+                        <td>{{ file.file.name|cut:"_"|slice:"1:" }}</td>
+                        <td>{{ file.upload_date }}</td>
+                        <td>{{ file.description }}</td>
+                        <td>{{ file.embedding_file }} </td>
+                        <td> <!-- 이동위치 : account/upload/edit_file -->
+                            <a href="{% url 'account:edit_file' file.id %}">수정하기</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: center;">
+            <span class="page-links">
+        
+                {% if file_obj.has_previous %}
+                    <a href="?file_page={{ file_obj.previous_page_number }}" class="pagination">이전</a>
+                {% else %}
+                    <a href="?file_page={{ file_obj.paginator.num_pages }}" class="pagination">이전</a>
+                {% endif %}
+
+                <span class="page-current">
+                    {{ file_obj.number }} / {{ file_obj.paginator.num_pages }}
+                </span>
+        
+                {% if file_obj.has_next %}
+                    <a href="?file_page={{ file_obj.next_page_number }}" class="pagination">다음</a>
+                {% else %}
+                    <a href="?file_page={{ 1 }}" class="pagination">다음</a>
+                {% endif %}
+                <!-- 경로: big_project\account\templates\upload\information.html, 주소는 ~~/account/upload -->
+                <a href="{% url 'account:file_upload' %}" class="my-button-link">파일 업로드</a>
+                <button type="submit">선택된 파일 삭제</button>
+            </span>
+        </div> 
+        <br><br>
+
+        </form>
+
+    <br><br>
+
+    {% if is_paginated %}
+    <div>
+        <span class="page-links">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="pagination">이전</a>
+            {% else %}
+                <!-- 맨 처음 페이지일 때, 이전 버튼이 마지막으로  -->
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination">이전</a>
+            {% endif %}
+
+            <span class="page-current">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="pagination">다음</a>
+            {% else %}
+                <!-- 맨 처음 페이지일 때, 다음 버튼이 첫 페이지로 -->
+                <a href="?page=1" class="pagination">다음</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>
+<div style="display: flex; justify-content: center;">
+    <a href="{% url 'client:selected_items' %}" id="OutboundButton" class="my-button-link" style="width: 180px;">아웃바운드 나가기</a>
+</div>
+
+
+<!-- 전체 선택하는 버튼, 선택된 고객 삭제 버튼 클릭 시 경고창 뜨게 구현-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() { // 고객 정보 올리는 파트 체크박스 전체 선택 및 삭제 기능
+
+        const selectAllCheckbox = document.getElementById('select-all');   //select-all 읽기
+
+        selectAllCheckbox.addEventListener('change', function() {  // selectAll 체크박스의 상태가 변경될 때마다 실행
+            const checkboxes = document.querySelectorAll('input[name="client_ids"]');  //모든 체크 된 요소 가져오기
+    
+            // selectAll 체크박스의 상태에 따라 모든 체크박스의 상태 변경
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        // 고객 삭제 버튼에 대한 이벤트 리스너
+        const deleteButton = document.querySelector('button[type="submit"]');
+
+        deleteButton.addEventListener('click', function(event) {
+            const checkedCount = document.querySelectorAll('input[name="client_ids"]:checked').length;
+    
+            if (checkedCount > 0) {
+                const confirmed = confirm('정말 선택된 고객을 삭제하시겠습니까?');
+                if (!confirmed) {
+                    event.preventDefault(); // 폼 제출 중지
+                }
+            }
+        });
+
+    
+
+    });
+
+    document.addEventListener('DOMContentLoaded', function() { // 회사 파일 올리는 파트 체크박스 전체 선택 및 삭제 기능
+        
+        const selectAllCheckbox = document.getElementById('select-all2');   //select-all 읽기
+
+        
+        selectAllCheckbox.addEventListener('change', function() {  // selectAll 체크박스의 상태가 변경될 때마다 실행
+            
+            const checkboxes = document.querySelectorAll('input[name="file_ids"]');  //모든 체크 된 요소 가져오기
+
+            // selectAll 체크박스의 상태에 따라 모든 체크박스의 상태 변경
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        //확인 메시지 표시
+        const form = document.getElementById('file_form');
+        form.addEventListener('submit', function(event) {
+            const checkedCount = document.querySelectorAll('input[name="file_ids"]:checked').length;
+
+            if (checkedCount > 0) {
+                const confirmed = confirm('정말 선택된 파일을 삭제하시겠습니까?');
+                if (!confirmed) {
+                    event.preventDefault(); // 폼 제출 중지
+                }
+            } 
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {//선택한 파일들을 프롬프트로 이동시키는 코드
+
+        //const outboundButton = document.querySelector('button > a[href="{% url 'client:selected_items' %}"]');
+        const outboundButton = document.getElementById("OutboundButton");
+        console.log('실행중 :', outboundButton);
+        outboundButton.addEventListener('click', function(event) { // 에러 하나
+            event.preventDefault(); 
+    
+
+            const selectedClientIds = Array.from(document.querySelectorAll('input[name="client_ids"]:checked')).map(checkbox => checkbox.value);
+            const selectedFileIds = Array.from(document.querySelectorAll('input[name="file_ids"]:checked')).map(checkbox => checkbox.value);
+            //console.log('Selected Client IDs:', selectedClientIds);
+            //console.log('Selected File IDs:', selectedFileIds);
+
+            // 선택된 고객 또는 파일이 하나도 없을 경우 경고 표시
+            if (selectedClientIds.length === 0 || selectedFileIds.length === 0) {
+                alert('고객과 파일 모두 선택해 주십시오.');
+                event.preventDefault(); // 기본 이벤트 (페이지 이동) 방지
+                return;
+            }
+
+            // URL 파라미터 설정
+            const urlParams = new URLSearchParams();
+            if (selectedClientIds.length > 0) urlParams.append('selected_clients', selectedClientIds.join(','));
+            if (selectedFileIds.length > 0) urlParams.append('selected_files', selectedFileIds.join(','));
+
+            // 새로운 URL로 이동
+            const newURL = "{% url 'client:selected_items' %}?" + urlParams.toString();
+            window.location.href = newURL;
+            });
+    });
+
+        // secure coding
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            var searchInputValue = document.getElementById('searchInput').value;
+            if (searchInputValue.length > 50) {  // 임계값 설정
+                alert('검색어는 50자를 초과할 수 없습니다.');
+                event.preventDefault();  // 폼 제출 방지
+                return;
+            }
+    });
+
+</script>
+
+{% endblock %}

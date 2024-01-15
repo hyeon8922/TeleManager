@@ -1,0 +1,85 @@
+<!-- post_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!--main-->
+    <div id="main" class="container">
+        <hr>
+        <br><br>
+
+        <div class="custom-table-wrapper">
+            <h2>chat</h2>
+            <a href="{% url 'chatbot:test' %}">chatbot</a>
+
+            <!-- Chatbot 스타일 -->
+            <style>
+                #chatbot-container {
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    background-color: #fff;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                    padding: 10px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    display: block; /* 기본적으로 보이도록 수정 */
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+
+                #chat-input {
+                    width: calc(100% - 20px);
+                    padding: 8px;
+                    margin-top: 10px;
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }
+
+                .chat-message {
+                    margin-top: 10px;
+                    padding: 8px;
+                    background-color: #f2f2f2;
+                    border-radius: 5px;
+                }
+            </style>
+
+            <!-- Chatbot 컨테이너 -->
+            <div id="chatbot-container">
+                <!-- 채팅 메시지 -->
+                <div class="chat-message">안녕하세요! 챗봇에게 메시지를 입력하세요.</div>
+
+                <!-- 채팅 입력창 -->
+                <input type="text" id="chat-input" placeholder="채팅 입력...">
+            </div>
+
+            <!-- Chatbot 스크립트 -->
+            <script>
+                const chatInput = document.getElementById('chat-input');
+                const chatContainer = document.getElementById('chatbot-container');
+
+
+                chatInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        const message = chatInput.value;
+                        // 여기서 실제로는 챗봇에게 입력된 메시지를 전송하고, 챗봇의 응답을 받아와야 합니다.
+                        // 이 예시에서는 사용자의 입력만 화면에 표시합니다.
+                        const chatMessage = document.createElement('div');
+                        chatMessage.className = 'chat-message';
+                        chatMessage.textContent = `사용자: ${message}`;
+                        chatContainer.appendChild(chatMessage);
+
+
+                        chatInput.value = ''; // 입력창 초기화
+                        chatInput.focus(); // 입력창에 포커스 유지
+                    }
+                });
+            </script>
+        </div>
+    </div>
+{% endblock %}

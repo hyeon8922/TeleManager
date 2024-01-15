@@ -1,0 +1,63 @@
+<!-- post_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+ 
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+ 
+{% block content %}
+<!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+ 
+    <div class="custom-table-wrapper">
+        <h2>게시판</h2>
+        <form id ='searchForm' action="" method="get" class="custom-search" >
+            {% csrf_token %}
+            <input type="text" id="searchInput" name="keyword" value="{{q|default:''}}" >
+            <input type="submit" value="Search" >
+        </form>
+       
+        <table>
+            <thead>
+                <tr>
+                    <th>Index</th>
+                    <th>Title</th>
+                    <th>작성자</th>
+                    <th>작성 날짜</th>
+                    <!-- 다른 필드들에 대한 헤더도 추가할 수 있음 -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'post:post_detail' pk=post.pk %}">{{ post.title }}</a></td>
+                        <td>{{ post.author.username }}</td>
+                        <td>{{ post.created }}</td>
+                        <!-- 다른 필드들에 대한 데이터도 추가할 수 있음 -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+       
+        <br>
+        <button> <a href="{% url 'post:post_new' %}" style='color:white'>New Post</a></button>
+    </div>
+</div>
+
+<script>
+    // secure coding
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+        var searchInputValue = document.getElementById('searchInput').value;
+        if (searchInputValue.length > 50) {  // 임계값 설정
+                alert('검색어는 50자를 초과할 수 없습니다.');
+                event.preventDefault();  // 폼 제출 방지
+                return;
+            }
+    });
+</script>
+{% endblock %}

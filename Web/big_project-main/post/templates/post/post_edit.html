@@ -1,0 +1,25 @@
+<!-- post_edit.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h1>Edit Post</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+
+    <a href="/post/">Back to Post List</a>
+</div>
+{% endblock %}

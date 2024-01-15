@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        text-align: center; /* 내부 요소의 수평 가운데 정렬을 위한 text-align 설정 */
+    }
+
+    .edit_file_box {
+        display: inline-block; /* 가로로 배열되게 함 */
+        text-align: center; /* 내부 요소의 수평 가운데 정렬을 위해 왼쪽 정렬로 변경 */
+    }
+    #description {
+        width: 1000px;
+    }
+</style>
+
+<!-- Banner -->
+<section id="banner">
+    <div class="inner">
+        <header>
+            <h1>TeleManager</h1>
+            <p>Outbound TM Automation Service for Enterprises</p>
+        </header>
+        <a href="#main" class="button big scrolly">Learn More</a>
+    </div>
+</section>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 정보 수정</title>
+</head>
+<body>
+
+<h3 class='centered'>파일 정보 수정</h3>
+
+
+<div class='edit_file_box'>
+    <form method="post">
+        {% csrf_token %}
+        <label for="description">파일 설명:</label><br>
+        <textarea id="description" name="description" rows="4" cols="50">{{ file.description }}</textarea> 
+    </form>
+    <br>
+    <button type="submit">완료</button>
+    <button><a href="{% url 'client:list' %}">취소</a></button>
+</div>
+
+</body>
+</html>
+{% endblock %}

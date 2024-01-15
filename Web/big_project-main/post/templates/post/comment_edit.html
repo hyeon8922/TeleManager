@@ -1,0 +1,27 @@
+<div class="community_new_page">
+    <h1>댓글 수정하기</h1>
+    <br>
+    <form action="{% url 'post:comment_edit' post.id comment.id %}" method="POST">
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+
+        <h6>작성자 : {{ user.username }}</h6>
+        <h6>내용</h6>
+        <h6>{{ form.content }}</h6>
+        <br><br><br>
+        <div class="button_locate">
+            <input type="submit" value="작성" class="btn btn-outline-secondary">
+            <button class="btn btn-outline-secondary"><a href="{% url 'post:post_detail' post.id %}"
+                    class="link-dark">취소</a></button>
+        </div>
+        {% endif %}
+    </form>
+    {% if user.is_authenticated and user.username == comment.user %}
+                    <div class="userbutton">
+                        <button class="btn btn-outline-secondary btn-sm" id="delete_button"><a
+                                href="{% url 'post:comment_edit' post.id comment.id %}" class="link-dark">편집</a></button>
+                        <button class="btn btn-outline-secondary btn-sm" id="delete_button"><a
+                                href="{% url 'post:comment_delete' post.id comment.id %}" class="link-dark">댓글삭제</a></button>
+                    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,166 @@
+<!-- login.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- main: 제목 h3, hr br br -->
+    <div id="main" class="container">
+        <hr><br><br>
+
+        <!-- Form -->
+        <div class="col align-center">
+            <div class="inner">
+                <h3>Login</h3>
+                <br>
+                <form method="post" action="#">
+                    <div class="row uniform">
+                        {% csrf_token %}
+                        <table>
+                            {{ form.as_table }}
+                        </table>
+                    </div>
+                    <a href="#" id="showAgreementModal">회원이 아니신가요?</a>
+                    <a> | </a>
+                    <a href="{% url 'account:password_reset' %}">비밀번호 찾기</a>
+                    <br><br>
+                    <ul class="actions">
+                        <li><input type="submit" value="Login"></li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+
+        <div id="agreementModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div class="agreement-content">
+                    <div class="scrollable-box" style="max-height: 300px; overflow-y: auto; text-align: left;">
+                        {{ "static/file/서비스이용약관.docx" | file_content|safe }}
+                    </div>
+                    <label>
+                        <input type="checkbox" name="agreement1" class="individual-checkbox" required />
+                        <span>
+                            <input type="checkbox" id="agreementCheckbox1" name="agreementCheckbox1" class="hidden-checkbox">
+                            <span>위 내용을 읽었으며, 이용약관에 동의합니다.</span>
+                        </span>
+                    </label>
+                    <br><br>
+                    <div class="scrollable-box" style="max-height: 300px; overflow-y: auto; text-align: left;">
+                        {{ "static/file/개인정보 수집 및 활용 동의서.docx" | file_content|safe }}
+                    </div>
+                    <label>
+                        <input type="checkbox" name="agreement1" class="individual-checkbox" required />
+                        <span>
+                            <input type="checkbox" id="agreementCheckbox1" name="agreementCheckbox1" class="hidden-checkbox">
+                            <span>위 내용을 읽었으며, 이용약관에 동의합니다.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="agreement-checkbox">
+                    <input type="checkbox" id="agreementCheckbox" name="agreementCheckbox">
+                    <label for="agreementCheckbox">전체 약관에 동의합니다.</label>
+                </div>
+                <br>
+                <button type="button" onclick="handleAgreement()">네, 동의합니다</button>
+                <button type="button" class="btn btn-primary" onclick="closeModal()">아니오, 동의하지 않습니다</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 스크립트 -->
+    <script>
+        // Get the modal
+        var agreementModal = document.getElementById('agreementModal');
+
+        // Get the button that opens the modal
+        var showAgreementModalBtn = document.getElementById('showAgreementModal');
+
+        // When the user clicks the button, open the modal
+        showAgreementModalBtn.onclick = function () {
+            openAgreementModal();
+        };
+
+        document.getElementById('disagreeButton').addEventListener('click', function () {
+            window.location.href = "{% url 'account:login' %}";
+        });
+
+        // When the user clicks on <span> (x) or outside the modal, close it
+        function closeModal() {
+            // Enable scrolling when the modal is closed
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflowY = 'auto';
+            agreementModal.style.display = 'none';
+            // Show the banner when the modal is closed
+            document.getElementById('banner').style.visibility = 'visible';
+        }
+
+        function initializeAgreementModal() {
+            var selectAllCheckbox = document.getElementById('agreementCheckbox');
+            var individualCheckboxes = document.querySelectorAll('.individual-checkbox');
+
+            // 체크박스 초기 상태 설정
+            individualCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            // 전체 체크박스에 대한 이벤트 핸들러 등록
+            selectAllCheckbox.addEventListener('change', function () {
+                individualCheckboxes.forEach(function (checkbox) {
+                    checkbox.checked = this.checked;
+                }, this);
+            });
+
+            // 체크박스에 대한 이벤트 핸들러 등록
+            individualCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    // 개별 체크박스가 변경될 때의 동작을 여기에 추가
+                });
+            });
+        }
+
+        function openAgreementModal() {
+            // Disable scrolling when the modal is open
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflowY = 'hidden';  // For older browsers
+            // Hide the banner when the modal is open
+            document.getElementById('banner').style.visibility = 'hidden';
+            agreementModal.style.display = 'block';
+
+            // 이 부분을 추가합니다.
+            initializeAgreementModal();
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == agreementModal) {
+                closeModal();
+            }
+        }
+
+        function handleAgreement() {
+            var individualCheckboxes = document.querySelectorAll('.individual-checkbox');
+            var allChecked = true;
+
+            // 모든 체크박스가 체크되었는지 확인
+            individualCheckboxes.forEach(function (checkbox) {
+                if (!checkbox.checked) {
+                    allChecked = false;
+                }
+            });
+
+            if (!allChecked) {
+                alert('약관에 동의해야 합니다.');
+            } else {
+                // 동의된 경우 signup 페이지로 이동
+                window.location.href = "{% url 'account:signup' %}";
+            }
+        }
+    </script>
+
+{% endblock %}

@@ -1,0 +1,168 @@
+<!-- start_tm.html -->
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Main Container */
+    #main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    /* Chart Styles */
+    #chart {
+      width: 200px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    #chart h3 {
+      font-size: 1rem;
+    }
+
+    #chart table {
+      border: 1px solid #000; /* Add your desired border style */
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    #chart th,
+    #chart td {
+      border: 1px solid #000; /* Add your desired border style */
+      padding: 8px;
+    }
+
+    /* Additional Styles for Buttons or other elements in the chart */
+    #chart button {
+      margin-top: 10px;
+    }
+  </style>
+
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h3>Outbound TM</h3>
+    <a>tm 목적:  {{ input_data }}</a>
+
+    <!-- main -->
+    
+    <div id='main' class='containered' >
+        <div id='chart'>
+            <h3 >선택된 고객 목록</h3>
+            <table border='1'>
+                <thead>
+                    <tr>
+                        <th><input type='checkbox' id='select-all'></th>
+                        <th>이름</th>
+                        <th>주소</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in selectedClients %}
+                        <tr>
+                            <td><input type='checkbox' name='client_ids' value='{{ client.id }}'></td>
+                            <td>{{ client.name }}</td>
+                            <td>{{ client.location }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3 >선택된 파일 목록</h3>
+            <table border='1'>
+                <thead>
+                    <tr>
+                        <th><input type='checkbox' id='select-all2'></th>
+                        <th>파일 이름</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in selectedFiles %}
+                        <tr>
+                            <td><input type='checkbox' name='file_ids' value='{{ file.id }}'></td>
+                            <td>{{ file.file.name|cut:"_"|slice:"1:" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+            <button id='goBack' onclick='goBack()'>뒤로가기</button>
+       
+
+        <!-- yh -->
+        <!-- 채팅 대화창 -->
+        <div class='chat-container'>
+            <div class='user-info'>
+                <img src='../../../static/images/냥.jpg' alt='User Avatar' width='30' height='30'>
+                <span>User123</span>
+                <div class='user-status-indicator'></div>
+            </div>
+
+            <div class='chat-messages' id='chat-messages'>
+                <!-- 채팅 메시지들이 동적으로 추가될 부분 -->
+                {% for q in question %}
+                    <div class='message received'>
+                        <div class='message-bubble'>{{ q }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class='input-container'>
+                <input type='text' id='message-input' placeholder='Type your message...'>
+                <button class='send-button' onclick='sendMessage()'>Send</button>
+            </div>
+        </div>
+        <div>
+            <button onclick='soundtrack()'>녹음하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    const chatInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    {% for q in question %}
+        const initialAnswerMessage = document.createElement('div');
+        initialAnswerMessage.className = 'message received';
+        initialAnswerMessage.innerHTML = `<div class="message-bubble">${q}</div>`;
+        chatMessages.appendChild(initialAnswerMessage);
+    {% endfor %}
+
+    // 기존 코드
+    function sendMessage() {
+        const userMessage = chatInput.value.trim();
+
+        if (userMessage !== '') {
+            // 사용자의 입력을 채팅창에 동적으로 추가
+            const userChatMessage = document.createElement('div');
+            userChatMessage.className = 'message sent';
+            userChatMessage.innerHTML = `<div class="message-bubble">${userMessage}</div>`;
+            chatMessages.appendChild(userChatMessage);
+
+            // 입력창 초기화 및 포커스 유지
+            chatInput.value = '';
+            chatInput.focus();
+        }
+    }
+
+    function soundtrack() {
+        // 녹음 기능 구현
+        // 원하는 동작 수행
+    }
+</script>
+
+{% endblock %}

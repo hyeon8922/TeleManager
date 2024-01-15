@@ -1,0 +1,38 @@
+<!-- profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<!--main-->
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <div class="table-wrapper">
+        <h4>My Info</h4>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td>{{user}}</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>{{user.email}}</td>
+                </tr>
+                <tr>
+                    <td>가입 날짜</td>
+                    <td>{{user.date_joined}}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <a href="{% url 'account:profile_update' %}">내 정보 수정하기</a>
+    </div>
+</div>
+{% endblock %}

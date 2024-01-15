@@ -1,0 +1,149 @@
+<!-- base.html -->
+<!DOCTYPE HTML>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <!-- 스크립트 -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    
+    {% block head %}{% endblock %}
+</head>
+<title>Telemanager</title>
+<body>
+
+    <!-- 헤더 -->
+    <header id="header" class="alt">
+        <div class="logo">
+            <a href="/">Tele<span>Manager</span></a>
+        </div>
+        
+        {% if not user.is_authenticated %}
+        <span class="header-text"> 
+            <a href="/account/">Login</a>
+        </span>
+        {% else %}
+        <span class="header-text">
+            {{user}}님,
+            <span class="logout-form" onclick="logoutUser()">
+                <a href="javascript:void(0)">Logout</a>
+            </span>
+        </span>
+        {% endif %}
+
+        <a href="#menu">메뉴</a>
+    </header>
+
+    <!-- 내비게이션 -->
+    <nav id="menu">
+        <ul class="links">
+            <li><a href="/">Home</a></li>
+            {% if user.is_authenticated %}
+                <li><a href='{%  url 'account:profile' %}'>내 정보</a></li>
+            {% endif %}
+            <li><a href='/client/'>고객관리</a></li>
+            <li><a href='/post/'>게시판</a></li>
+            
+        </ul>
+    </nav>
+
+    <!-- 배너 -->
+    <section id="banner">
+        <div class="inner">
+            <header>
+                <h1>TeleManager</h1>
+                <p>Outbound TM Automation Service for Enterprises</p>
+            </header>
+            <a href="#main" class="button big scrolly">Learn More</a>
+        </div>
+    </section>
+
+    {% block content %}{% endblock %}
+
+
+    <!-- 푸터 -->
+    <footer id="footer">
+        <div class="copyright">
+            <ul class="icons">
+                <li><a href="https://github.com/TeleManager" class="icon fa-github"><span class="label">Github</span></a></li>
+            </ul>
+        </div>
+    </footer><div class="copyright">
+        TeleManager | 개인정보처리방침 | Tel. 02-1234-5678
+    </div>
+    <div class="copyright">
+        Site made with: <a href="#">Team 11</a>
+    </div>
+
+
+
+
+    {% if request.path != '/' %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 페이지 로드 시에 #main 부분으로 스크롤되도록 설정
+            var mainSection = document.getElementById('main');
+            if (mainSection) {
+                window.scrollTo({
+                    top: mainSection.offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    
+        function logoutUser() {
+            // 로그아웃 폼을 서브밋
+            document.getElementById('logoutForm').submit();
+        }
+
+        function logoutUser() {
+            // 로그아웃을 서버에 요청
+            fetch('/account/logout/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Django의 LOGIN_REDIRECT_URL로 이동
+                    window.location.href = response.url;
+                } else {
+                    console.error('로그아웃 실패');
+                }
+            })
+            .catch(error => console.error('로그아웃 요청 중 에러 발생:', error));
+        }
+    
+        // CSRF 토큰을 쿠키에서 가져오는 함수
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    {% endif %}
+
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/jquery.scrollex.min.js' %}"></script>
+    <script src="{% static 'js/jquery.scrolly.min.js' %}"></script>
+    <script src="{% static 'js/skel.min.js' %}"></script>
+    <script src="{% static 'js/util.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    
+</body>
+</html>

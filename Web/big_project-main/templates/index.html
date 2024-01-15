@@ -1,0 +1,237 @@
+<!-- index.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<style>
+    .col2 {
+        margin-bottom: 5px; /* h3와 a 간격 조절 */
+    }
+
+    .col2 a {
+        margin-bottom: 100px; /* a와 p 간격 조절 */
+    }
+
+    .col2 p {
+        margin-bottom: 5px; /* 문단 간격을 조절합니다. */
+        position: relative;
+        padding-left: 25px; /* 체크 표시 전용 여백을 설정합니다. */
+    }
+
+    .col2 p::before {
+        content: "✔"; /* 체크 표시를 추가합니다. */
+        color: #3498db; /* 체크 표시의 색상을 설정합니다. */
+        position: absolute;
+        left: 5px; /* 체크 표시의 위치를 조절합니다. */
+    }
+
+    /* 마지막 세 개의 요소에 대한 스타일 */
+    .col2 .checked p {
+        content: "✔"; /* 체크 표시를 추가합니다. */
+        color: #3498db; /* 체크 표시의 색상을 설정합니다. */
+        position: absolute;
+        left: 5px; /* 체크 표시의 위치를 조절합니다. */
+        /* 특별한 스타일을 추가합니다. */
+        color: green; /* 텍스트 색상 변경 */
+        font-weight: bold; /* 텍스트 굵게 변경 */
+    }
+
+    .custom-image {
+        width: 2000px;
+        height: 800px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    .image-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .image-container img {
+        max-width: calc(30% - 20px); /* 20px은 각 이미지 간의 간격입니다. */
+        margin-bottom: 20px;
+        width: 300px;
+        height: 200px;
+    }
+
+    .content-wrapper {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .content {
+        max-width: calc(30% - 20px);
+        text-align: left;
+        margin-bottom: 20px;
+    }
+    .content h3 {
+        text-align: center;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 16px;
+        text-decoration: none;
+        background-color: #3498db;
+        color: #ffffff;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+    }
+</style>
+    <!-- 메인 -->
+    <div id="main">
+        <!-- 섹션 -->
+        <section class="wrapper style1">
+            <div class="inner">
+                <!-- 2 열 -->
+                <div class="flex flex-2">
+                    <div class="col col1">
+                            <a href="#" class="link"><img src="{% static 'images/guest.png' %}" alt="" width="350" height="350"></a>
+                    </div>
+                    <div class="col col2">
+                        <h3>고객 마케팅</h3>
+                        <a>선택된 고객과 제공하신 마케팅 정보로 </a>
+                        <br>
+                        <a>고객에게 자동으로 아웃바운드 서비스를 제공합니다</a>
+                        <br><br>
+                        <p class="checked">Cost Efficiency Inventory</p>
+                        <p class="checked">Providing Personalized Customer Experience</p>
+                        <p class="checked">"Formulating Data-Driven Strategies</p>
+                        <br>
+                        {% if user.is_authenticated %}
+                            <a href="/client/" class="button">Learn More</a>    
+                        {% else %}
+                            <a href="/account/" class="button">Learn More</a>    
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 섹션 -->
+    <section class="wrapper style1">
+        <div class="inner">
+            <div class="flex flex-2">
+                <div class="container">
+                    <div class="image-container">
+                        <img src="{% static 'images/main_login.png' %}" alt="Image 1">
+                        <img src="{% static 'images/main_marketing.png' %}" alt="Image 2">
+                        <img src="{% static 'images/main_board.png' %}" alt="Image 3">
+                        <div class="content-wrapper">
+                        <div class="content">
+                            <h3>LOGIN</h3>
+                            <p>기업별 맞춤화 정보를 제공하기 위해 로그인해주세요 </p>
+                            <a href="/account/" class="button">Learn More</a>    
+                    </div>
+                        
+                        <div class="content">
+                            <h3>MARKETING</h3>
+                            <span>Bert 모델을 사용하여 아웃바운드 메시지를 작성하고 고객의 감정을 분류하여</span>
+                            <span>마케팅을 자동으로 진행합니다</span>
+                            {% if user.is_authenticated %}
+                                <a href="/client/" class="button">Learn More</a>    
+                            {% else %}
+                                <a href="/account/" class="button">Learn More</a>    
+                            {% endif %}
+                        </div>
+                        <div class="content">
+                            <h3>POST</h3>
+                            <p>자유게시판을 통해 의견을 자유롭게 나누세요</p>
+                            {% if user.is_authenticated %}
+                                <a href="/post/" class="button">Learn More</a>    
+                            {% else %}
+                                <a href="/account/" class="button">Learn More</a>    
+                            {% endif %} 
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- jQuery를 추가한 후 -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // 애니메이션 대상 요소 선택
+        var col1 = $(".col.col1");
+        var col2 = $(".col.col2");
+
+        // 초기 상태 설정
+        col1.css({
+            opacity: 0,
+            transform: "translateX(-20px)"
+        });
+
+        col2.css({
+            opacity: 0,
+            transform: "translateX(20px)"
+        });
+
+        // 애니메이션 업데이트 함수
+        function updateAnimation(scrollTop) {
+            // col1 애니메이션 업데이트
+            var col1Offset = col1.offset().top;
+            if (col1Offset < scrollTop + window.innerHeight) {
+                var col1Progress = Math.min(1, (scrollTop + window.innerHeight - col1Offset) / window.innerHeight);
+                col1.css({
+                    opacity: col1Progress,
+                    transform: "translateX(" + (-300 + 300 * col1Progress) + "px)"
+                });
+            }
+
+            // col2 애니메이션 업데이트
+            var col2Offset = col2.offset().top;
+            if (col2Offset < scrollTop + window.innerHeight) {
+                var col2Progress = Math.min(1, (scrollTop + window.innerHeight - col2Offset) / window.innerHeight);
+                col2.css({
+                    opacity: col2Progress,
+                    transform: "translateX(" + (300 - 300 * col2Progress) + "px)"
+                });
+            }
+        }
+
+        // 스크롤 이벤트 리스너 등록
+        var lastScrollTop = 0;
+        var ticking = false;
+
+        function onScroll() {
+            var scrollTop = $(window).scrollTop();
+
+            if (!ticking) {
+                requestAnimationFrame(function () {
+                    updateAnimation(scrollTop);
+                    ticking = false;
+                });
+
+                ticking = true;
+            }
+
+            lastScrollTop = scrollTop;
+        }
+
+        $(window).scroll(onScroll);
+    });
+</script>
+{% endblock %}

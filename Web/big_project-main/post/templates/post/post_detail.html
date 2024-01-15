@@ -1,0 +1,80 @@
+<!-- post_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="main" class="container">
+    <hr>
+    <br><br>
+
+    <h1>{{ post.title }}</h1>
+    <div>
+        <a>{{ post.author.username }}</a>
+        <a> | </a>
+        <a>{{ post.created }}</a>
+    </div>
+
+    <p class='post_content'>{{ post.content }}</p>
+
+    <a href="/post/">Back to Post List</a>
+    <a> | </a>
+    {% if user.is_authenticated and user == post.author %}
+        <a href="{% url 'post:post_delete' pk=post.pk %}">Delete Post</a>
+        <a> | </a>
+        <a href="{% url 'post:post_edit' pk=post.pk %}">Edit Post</a>
+    {% endif %}
+
+    <br><br>
+    {% if user.is_authenticated == True %}
+    <form action="{% url 'post:comment' post.id %}" method="POST" class="content_form" style="display: flex;">
+        {% csrf_token %}
+        <div class="form_community_detail"></div>
+        <textarea class="form-content" name="content" placeholder="댓글을 작성해주세요."></textarea>
+        <input type="submit" value="작성" class="btn btn-outline-secondary btn-sm btn-comment-submit" id="comment_submit">
+    </form>
+{% endif %}
+    <div class="comment-section">
+        {% for comment in post.comment_set.all %}
+            <div class="container">
+                <div class="card" id="contain2">
+                    <div class="card-body">
+                        <i class="fas fa-user-circle" id="peopleicon"></i>
+                        <p2 class="writer">{{ comment.user }}  | </p2>
+                        <p2 class="coment_update">{{ comment.updated }}</p2>
+                        <br>
+                        <p2 class="coment_content">{{ comment.content }}</p2>
+
+                        <div class="delete-button-container">
+                            {% if user.is_authenticated and user == comment.user %}
+                                <!-- 현재 로그인한 사용자와 댓글 작성자가 일치하면 삭제 버튼 표시 -->
+                                <form method="post" action="{% url 'post:delete_comment' pk=post.pk comment_id=comment.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var commentSection = document.querySelector('.comment-section');
+
+        // comment-section의 하위에 .container가 없으면 숨김 처리
+        if (!commentSection.querySelector('.container')) {
+            commentSection.style.display = 'none';
+        } else {
+            commentSection.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

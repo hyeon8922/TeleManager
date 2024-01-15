@@ -1,0 +1,29 @@
+test용 아이디
+
+- 아이디 : testtest
+- 비밀번호 : test12341234
+
+관리자 아이디
+
+- 아이디 : admin
+- 비밀번호 : qpwoei12@ 
+
+추가로 회원가입할 경우 관리자 승인이 필요한 데 이때 관리자 아이디로 접속한 후 
+회원가입 신청한 유저의 is_approved 필드를 true로 설정하면 사이트 이용이 가능합니다 :)
+
+
+#####################################################
+사이트 이용을 위해서는 .env 파일의 변수에 필요한 키값을 발급받아 작성하여야 합니다.
+보안 문제로 키값을 모두 비워두었습니다.
+#####################################################
+
+1. OPENAI_API_KEY
+OPENAI_API_KEY = ""
+
+2. RECAPTACH KEY
+RECAPTCHA_PUBLIC_KEY = ''
+RECAPTCHA_PRIVATE_KEY = ''
+
+3. SMTP KEY
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''

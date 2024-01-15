@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block static %}
+    <!-- 외부 CSS 파일에 대한 링크 -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!--main-->
+    <div id="main" class="container">
+        <hr>
+        <br><br>
+        <div class='custom-table-wrapper'>
+            <h3 class='centered'>{{ error_message }}</h3>
+            <a class='centered'>잠시만 기다려주세요</a>
+            <br>
+            <a href="{% url 'client:upload' %}">뒤로가기</a>
+        </div>
+    </div>
+
+
+{% endblock %} 

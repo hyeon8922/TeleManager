@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+{% block static %}
+{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error</title>
+</head>
+<body>
+    <div class='custom-table-wrapper'>
+        <h3 class='centered'>URL Error</h3>
+        <br>
+        <a href="{% url 'index' %}">Please Check URL</a>
+    </div>
+</body>
+</html>
+{% endblock %}
+
